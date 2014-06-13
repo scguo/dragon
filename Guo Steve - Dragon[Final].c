@@ -2,10 +2,10 @@
  * This a game called "Dragon", written in the C language. It is a remake of/inspired
  * by "Snake", a video game first released during the mid 1970s in arcades.
  *
- *     In Dragon you control a long, thin creature (resembling a snake), which roams around on a bordered plane,
+ * In Dragon you control a long, thin creature (resembling a snake), which roams around on a bordered plane,
  * picking up food, whilst trying to avoid touching its own tail/body or the walls that surround the playing field.
  *
- *     Each time the Dragon eats a piece of food, its tail grows longer by one length, making the game increasingly difficult.
+ * Each time the Dragon eats a piece of food, its tail grows longer by one length, making the game increasingly difficult.
  * You can control the direction the Dragon heads (up, left, down, or right) while the body/tail follows suit, but you cannot
  * stop the Dragon from moving while the game is in progress, or go in reverse.
  *
@@ -19,23 +19,23 @@
 #include <windows.h>
 
 /* Defined Contants */
-#define LIMIT_Y 32 /* Changeable, though 15 is preferred [Maximum number of rows for the playing area] */
-#define LIMIT_X 76 /* Fixed 76 [Maximum number of columns for the playing Area] */
-#define X_OFFSET 2 /* Fixed column offset from origin of console window*/
-#define Y_OFFSET 2 /* Fixed row offset from origin of console window*/
+#define LIMIT_Y 32 /* Maximum number of rows for the playing area */
+#define LIMIT_X 76 /* Maximum number of columns for the playing Area */
+#define OFFSET_X 2 /* Column offset from origin of console window*/
+#define OFFSET_Y 2 /* Row offset from origin of console window*/
 #define SPACE_CHARACTER 32 /* Default: 32 [space] */
-#define FOOD_CHARACTER 1 /* Default: 1 [white on black smiling face] */
+#define FOOD_CHARACTER 1 /* White on black smiling face */
 #define OBSTACLE_CHARACTER 219 /* Default: 219 [white full block] */
-#define DRAGON_KEY_LAYOUTS 3 /* Number of customizable Dragon control */
-#define DRAGON_LENGTH_CAP 512 /* Maximum possible size of Dragon */
-#define MAX_GAME_RECORDS 20 /* Maximum size of records file */
+#define DRAGON_KEY_LAYOUTS 3 /* Number of customizable Dragon key layouts */
+#define DRAGON_LENGTH_CAP 512 /* Maximum size of Dragon */
+#define MAX_GAME_RECORDS 20 /* Maximum number of entries displayed in records*/
 #define MAX_NAME_LENGTH 9 /* 8 Character max [add one for '\0']*/
 
 /* Gradient characters */
-#define FULL_BLOCK_CHARACTER 219
-#define DARK_SHADE_CHARACTER 178
-#define MEDIUM_SHADE_CHARACTER 177
-#define LIGHT_SHADE_CHARACTER 176
+#define FULL_BLOCK_CHARACTER 219 /* Full gradient block */
+#define DARK_SHADE_CHARACTER 178 /* Dark shade gradient block */
+#define MEDIUM_SHADE_CHARACTER 177 /* Medium shade gradient block */
+#define LIGHT_SHADE_CHARACTER 176 /* Light shade gradient block */
 
 /* Directional characters */
 #define LD_UR_CHARACTER 201 /* Dragon heading: left-down, or up-right */
@@ -46,27 +46,29 @@
 #define UU_DD_CHARACTER 186 /* Dragon heading: up-up, or down-down */
 
 /* Middle of playing field */
-#define spawnDragon_x (LIMIT_X / 2) /* Middle of x-plane */
-#define spawnDragon_y (LIMIT_Y / 2) /* Middle of y-plane */
+#define SPAWNDRAGON_X (LIMIT_X / 2) /* Middle of x-plane */
+#define SPAWNDRAGON_Y (LIMIT_Y / 2) /* Middle of y-plane */
 
 /* Constants */
-const char * const DRAGON_GAME_VERSION = "=Final=^Dragon"; /* Current development version */
-const char * const DRAGON_RECORD_FILE = "Guo Steve - Dragon Records.dat"; /* Name of game record file */
+const char * const DRAGON_GAME_VERSION = "Dragon 3.0"; /* Current development version */
+const char * const DRAGON_RECORD_FILE = "Guo Steve - Dragon Records.bin"; /* Name of game record binary file */
 
 /* Enumerated definitions */
 enum GAME_MODE
 {
-    RANDOM_LEVEL,
-    SPAWN_LEVEL,
-    USER_LEVEL
+    RANDOM_LEVEL, /* Random field generation upon reaching level target mode */
+    SPAWN_LEVEL, /* Spawn tiles upon growth mode */
+    USER_LEVEL /* User loaded field mode */
 };
 
 enum TILE_TYPE
 {
-    BLANK_TILE,
-    FOOD_TILE,
-    OBSTACLE_TILE
+    BLANK_TILE,	/* User field code for BLANK_CHARACTER */
+    FOOD_TILE, /* User field code for FOOD_CHARACTER */
+    OBSTACLE_TILE /* User field code for OBSTACLE_CHARACTER */
 };
+
+/* Function prototypes */
 
 /* Visuals [aids] */
 void moveCursorXY(int x, int y);
@@ -121,7 +123,7 @@ struct DragonNode
     int row;
     int col;
     int character;
-} Dragon[DRAGON_LENGTH_CAP]; /* Dragon length maximum*/ 
+} Dragon[DRAGON_LENGTH_CAP]; /* Dragon body data*/ 
 
 /* Structure for reading/writing a record to a binary file*/
 struct GameRecord
@@ -133,7 +135,7 @@ struct GameRecord
 };
 
 /* Global gameplay variables */
-int lengthDragon = 0; /* Shown Dragon's length */
+int lengthDragon = 0; /* Dragon's length currently shown on screen */
 int undisplayedLengthDragon = 0; /* Buffered Dragon length */
 int KeyOptionUsed = 0; /* Key layouts for control */
 int playingField[LIMIT_Y][LIMIT_X]; /* Hidden calculations field */
@@ -282,21 +284,19 @@ int mainMenu()
             printf(" \"3\" to play with a user field (status: loaded) \n");
         }
         printf(" \"4\" to load a user field from a file\n");
-        printf(" \"5\" to create/edit a user field\n");
+        printf(" \"5\" to create a user field\n");
         printf(" \"6\" to unload the user field\n");
         printf(" \"7\" to re-map player keys\n");
         printf(" \"8\" to show game records\n");
-        printf(" \"9\" to reset/create game records\n");
+        printf(" \"9\" to reset/clear game records\n");
         printf(" \"0\" to quit Dragon\n");
 
         do
         {
             fflush(stdin);
-            printf("\nOption: ");
+            printf("\n Option: ");
             returnCode = scanf("%c", &gameMode);
         }while(returnCode != 1 || gameMode < '0' || gameMode > '9');
-
-        system("cls");
 
         switch(gameMode)
         {
@@ -468,25 +468,25 @@ void playDragon(enum GAME_MODE gameMode)
             }
 
             /* Collision with wall/s detection, the Dragon dies */
-            if(Dragon[lengthDragon - 1].row <= Y_OFFSET - 1)
+            if(Dragon[lengthDragon - 1].row <= OFFSET_Y - 1)
             {
                 moveCursorXY(0, 0);
                 printf("You collided with the top limit");
                 inputKey = 'x'; /* exits game loop - Game Over */
             }
-            else if(Dragon[lengthDragon - 1].col <= X_OFFSET - 1)
+            else if(Dragon[lengthDragon - 1].col <= OFFSET_X - 1)
             {
                 moveCursorXY(0, 0);
                 printf("You collided with the left limit");
                 inputKey = 'x'; /* exits game loop - Game Over */
             }
-            else if(Dragon[lengthDragon - 1].row > LIMIT_Y + Y_OFFSET - 1)
+            else if(Dragon[lengthDragon - 1].row > LIMIT_Y + OFFSET_Y - 1)
             {
                 moveCursorXY(0, 0);
                 printf("You collided with the bottom limit");
                 inputKey = 'x'; /* exits game loop - Game Over */
             }
-            else if(Dragon[lengthDragon - 1].col > LIMIT_X + X_OFFSET - 1)
+            else if(Dragon[lengthDragon - 1].col > LIMIT_X + OFFSET_X - 1)
             {
                 moveCursorXY(0, 0);
                 printf("You collided with the right limit");
@@ -494,7 +494,7 @@ void playDragon(enum GAME_MODE gameMode)
             }
             
             /* Collision with obstacle/s detection, the Dragon dies */
-            if(OBSTACLE_CHARACTER == playingField[Dragon[lengthDragon - 1].row - Y_OFFSET][Dragon[lengthDragon - 1].col - X_OFFSET])
+            if(OBSTACLE_CHARACTER == playingField[Dragon[lengthDragon - 1].row - OFFSET_Y][Dragon[lengthDragon - 1].col - OFFSET_X])
             {
                 moveCursorXY(0, 0);
                 printf("You collided with an obstacle");
@@ -514,13 +514,13 @@ void playDragon(enum GAME_MODE gameMode)
             }
 
             /* Collision with food detection, the Dragon grows */
-            if(FOOD_CHARACTER == playingField[Dragon[lengthDragon - 1].row - Y_OFFSET][Dragon[lengthDragon - 1].col - X_OFFSET])
+            if(FOOD_CHARACTER == playingField[Dragon[lengthDragon - 1].row - OFFSET_Y][Dragon[lengthDragon - 1].col - OFFSET_X])
             {
                 /* Increase currentScore and length of the Dragon */
                 currentScore += (lengthDragon + undisplayedLengthDragon) * numberTiles;
                 undisplayedLengthDragon++;
                 addNode(lastDirectionDragon, directionDragon);
-                playingField[Dragon[lengthDragon - 1].row - Y_OFFSET][Dragon[lengthDragon - 1].col - X_OFFSET] = SPACE_CHARACTER;
+                playingField[Dragon[lengthDragon - 1].row - OFFSET_Y][Dragon[lengthDragon - 1].col - OFFSET_X] = SPACE_CHARACTER;
 
                 /* When length of the Dragon reaches level target, continue to next level */
                 if(RANDOM_LEVEL == gameMode && lengthDragon == (currentLevel + 3) * 2)
@@ -529,7 +529,7 @@ void playDragon(enum GAME_MODE gameMode)
                     numberTiles += 2; /* Add to number of tiles */
                     currentLevel++; /* Change current level */
 
-                    /* Increase speed every 2 levels */
+                    /* Increase speed every even level */
                     if(0 == currentLevel % 2 && currentDelay > 5)
                     {
                         currentDelay--;
@@ -570,11 +570,11 @@ void playDragon(enum GAME_MODE gameMode)
         printf("  G A M E      O V E R  ");
         
         moveCursorXY(1, 7);
-        printf("Enter name (only first 8 characters accepted): ");
+        printf("Enter your name (only 8 characters accepted): ");
         
         while(true)
         {
-            moveCursorXY(strlen("Enter name (only first 8 characters accepted): ") + 1, 7);
+            moveCursorXY(strlen("Enter your name (only 8 characters accepted): ") + 1, 7);
             if(NULL != fgets(playerName, sizeof(playerName), stdin))
             {
                 fflush(stdin);
@@ -593,7 +593,7 @@ void playDragon(enum GAME_MODE gameMode)
         
         saveGameRecord(playerName, gameMode, currentScore, lengthDragon + undisplayedLengthDragon); /* Auto-save */
 
-        moveCursorXY(30,9);
+        moveCursorXY(30,10);
         printf("Play Again? (y/n): ");
 
         do
@@ -617,11 +617,13 @@ void readUserField(bool *userFieldLoaded)
 
     /* Instructions on how the file being read should have been setup */
     printf("The file should have elements that are separated by spaces)\n");
+    printf("Please use main menu option \"5\" to create a user field file\n");
     printf("type \"quit\" to return to main menu\n");
+    
     /* Error checking in case file is unaccessable */
     do
     {
-        printf("Enter a valid file[name] (e.g. \"Dragon_Field_1.txt\"):");
+        printf("Enter a valid file[name]:");
         fflush(stdin);
         gets(strFilename);
         
@@ -663,12 +665,12 @@ void createUserField(bool *userFieldLoaded)
     *userFieldLoaded = true; /* Indicates that a user field was successfully loaded*/
     
     /* Draw current user field */
-    drawLimit(X_OFFSET, Y_OFFSET - 1); /* Upper limit of playing field */
+    drawLimit(OFFSET_X, OFFSET_Y - 1); /* Upper limit of playing field */
 
     /* Draw vertical limit */
     for(row = 0; row < LIMIT_Y; row++)
     {
-        moveCursorXY(X_OFFSET - 1, Y_OFFSET + row);
+        moveCursorXY(OFFSET_X - 1, OFFSET_Y + row);
         printf("%c", OBSTACLE_CHARACTER); /* left limit of field*/
         /* print contents, of line, inside boundaries */
         for(col = 0; col < LIMIT_X; col++)
@@ -678,12 +680,12 @@ void createUserField(bool *userFieldLoaded)
         printf("%c", OBSTACLE_CHARACTER); /* right limit of field*/
     }
 
-    drawLimit(X_OFFSET, LIMIT_Y + Y_OFFSET); /* Bottom limit of playing field */
+    drawLimit(OFFSET_X, LIMIT_Y + OFFSET_Y); /* Bottom limit of playing field */
 
-    moveCursorXY(X_OFFSET, LIMIT_Y + 4);
+    moveCursorXY(OFFSET_X, LIMIT_Y + 4);
     printf("\"0\" for a blank tile, \"1\" for a food tile, \"2\" for an obstacle tile");
 
-    moveCursorXY(X_OFFSET, LIMIT_Y + 5);
+    moveCursorXY(OFFSET_X, LIMIT_Y + 5);
     printf("\"9\" to return to main menu");
     
     moveCursorXY(0, 0);
@@ -696,10 +698,10 @@ void createUserField(bool *userFieldLoaded)
     {
         for(j = 0; j < LIMIT_X; j++)
         {
-            moveCursorXY(X_OFFSET + 50, LIMIT_Y + 5);
-            printf("Cursor location: [%2d][%2d]", i + 1, j + 1);
+            moveCursorXY(OFFSET_X + 50, LIMIT_Y + 5);
+            printf("Cursor location: [%2d][%2d]", i, j);
 
-            moveCursorXY(j + X_OFFSET, i + Y_OFFSET); /* Position cursor in relative place on playing field */
+            moveCursorXY(j + OFFSET_X, i + OFFSET_Y); /* Position cursor in relative place on playing field */
             while(true)
             {
                 Sleep(100); /* Game speed delay; to prevent over processor usage  */
@@ -710,7 +712,7 @@ void createUserField(bool *userFieldLoaded)
                    
                     if(inputKey == '9')
                     {
-                        moveCursorXY(j + X_OFFSET, i + Y_OFFSET);
+                        moveCursorXY(j + OFFSET_X, i + OFFSET_Y);
                         printf("%c", characterMapping(userField[i][j]));
                         saveUserField();
                         return; /* Prematurely quit */
@@ -728,7 +730,7 @@ void createUserField(bool *userFieldLoaded)
         }
     }
     
-    moveCursorXY(X_OFFSET, LIMIT_Y + 7);
+    moveCursorXY(OFFSET_X, LIMIT_Y + 7);
     printf("Your user field has been created");
     saveUserField();
 }
@@ -759,20 +761,19 @@ void saveUserField()
     FILE *userFile;
 
     /* Instructions on how the file being read should have been setup */
-    moveCursorXY(X_OFFSET, LIMIT_Y + 8);
-    printf("Saving user field to file (type \"quit\" to not save)");
+    moveCursorXY(OFFSET_X, LIMIT_Y + 8);
+    printf("Saving user field to file (type \"quit\" to not save)\n");
     
     /* Error checking in case file is unaccessable */
     do
     {
-        moveCursorXY(X_OFFSET, LIMIT_Y + 9);
-        printf("Enter a valid file[name] (e.g. \"Dragon_Field_1.txt\"):");
+        printf("Enter a valid file[name]:");
         fflush(stdin);
         gets(strFilename);
 
         if(!strcmp(strFilename, "quit"))
         {
-            printf("\nReturning to the main menu without saving to a file\n");
+            printf("\nReturning to the main menu without saving a file, but has been loaded\n");
             system("pause");
             return; /* Prematurely quit */
         }
@@ -780,7 +781,7 @@ void saveUserField()
         userFile = fopen(strFilename, "w");
     }while(NULL == userFile);
 
-    /*Acquire elements of field*/
+    /* Save elements of field */
     for(i = 0; i < LIMIT_Y; i++)
     {
         for(j = 0; j < LIMIT_X; j++)
@@ -790,7 +791,7 @@ void saveUserField()
     }
     fclose(userFile);
 
-    printf("Your current user field has been saved to a %s\n", strFilename);
+    printf("Your current user field has been saved to: %s\n", strFilename);
     system("pause");
 }
 
@@ -800,7 +801,7 @@ void clearUserField(bool *userFieldLoaded)
     int i, j; /* Field matrix counter variables */
     
     /* Delete elements of field */
-    printf("--> Field of %d by %d has been cleared\n", LIMIT_X, LIMIT_Y);
+    printf("Field of %d by %d has been cleared\n", LIMIT_Y, LIMIT_X);
     
     for(i = 0; i < LIMIT_Y; i++)
     {
@@ -1008,8 +1009,8 @@ void createField(enum GAME_MODE gameMode, int currentLevel)
     }
     
     /* Rereate the Dragon array */
-    Dragon[0].row = spawnDragon_y;
-    Dragon[0].col = spawnDragon_x;
+    Dragon[0].row = SPAWNDRAGON_Y + OFFSET_Y;
+    Dragon[0].col = SPAWNDRAGON_X + OFFSET_X;
     Dragon[0].character = LL_RR_CHARACTER; /* left, or right character */
 
     /* Print game name in top right corner */
@@ -1017,24 +1018,24 @@ void createField(enum GAME_MODE gameMode, int currentLevel)
     printf("%80s", DRAGON_GAME_VERSION);
 
     /* Draw playing field */
-    drawLimit(X_OFFSET, Y_OFFSET - 1); /* Upper limit of playing field */
+    drawLimit(OFFSET_X, OFFSET_Y - 1); /* Upper limit of playing field */
 
     /* Draw vertical limit */
     for(row = 0; row < LIMIT_Y; row++)
     {
-        moveCursorXY(X_OFFSET - 1, Y_OFFSET + row);
-        printf("%c", OBSTACLE_CHARACTER); /* left limit of field*/
-        /* print contents, of line, inside boundaries */
+        moveCursorXY(OFFSET_X - 1, OFFSET_Y + row);
+        printf("%c", OBSTACLE_CHARACTER); /* Left limit of field*/
+        /* Print line of the contents of playing field, between boundaries */
         for(col = 0; col < LIMIT_X; col++)
         {
             printf("%c", playingField[row][col]);
         }
-        printf("%c", OBSTACLE_CHARACTER); /* right limit of field*/
+        printf("%c", OBSTACLE_CHARACTER); /* Right limit of field*/
     }
 
-    drawLimit(X_OFFSET, LIMIT_Y + Y_OFFSET); /* Bottom limit of playing field */
+    drawLimit(OFFSET_X, LIMIT_Y + OFFSET_Y); /* Bottom limit of playing field */
 
-    moveCursorXY(11, LIMIT_Y + Y_OFFSET + 5);
+    moveCursorXY(11, LIMIT_Y + OFFSET_Y + 5);
     printf("Key layout: %d {Up: %c, Left: %c, Down: %c, Right: %c} Exit: x.", (KeyOptionUsed + 1), playerControls[KeyOptionUsed].KEY_UP, playerControls[KeyOptionUsed].KEY_LEFT, playerControls[KeyOptionUsed].KEY_DOWN, playerControls[KeyOptionUsed].KEY_RIGHT);
 }
 
@@ -1056,24 +1057,27 @@ void displayScore(enum GAME_MODE gameMode, int currentScore, int currentHighscor
 {
     if(RANDOM_LEVEL == gameMode) /* Only applicable when playing in this mode */
     {
-        moveCursorXY(X_OFFSET, LIMIT_Y + Y_OFFSET + 1);
+        moveCursorXY(OFFSET_X, LIMIT_Y + OFFSET_Y + 1);
         printf("Level: %8d", currentLevel);
     
-        moveCursorXY(X_OFFSET + 28, LIMIT_Y + Y_OFFSET + 3);
+        moveCursorXY(OFFSET_X + 28, LIMIT_Y + OFFSET_Y + 3);
         printf("Level Target: %5d", (currentLevel + 3) * 2 + 1);
     }
     
-    moveCursorXY(X_OFFSET + 28, LIMIT_Y + Y_OFFSET + 1);
+    if(USER_LEVEL != gameMode) /* Only applicable if not playing in this mode */
+    {
+        moveCursorXY(OFFSET_X + 53, LIMIT_Y + OFFSET_Y + 3);
+        printf("Obstacles: %5d", numberTiles);
+    }
+    
+    moveCursorXY(OFFSET_X + 28, LIMIT_Y + OFFSET_Y + 1);
     printf("Score: %8u", currentScore);
 
-    moveCursorXY(X_OFFSET + 53, LIMIT_Y + Y_OFFSET + 1);
+    moveCursorXY(OFFSET_X + 53, LIMIT_Y + OFFSET_Y + 1);
     printf("High Score: %8u", currentHighscore);
 
-    moveCursorXY(X_OFFSET, LIMIT_Y + Y_OFFSET + 3);
+    moveCursorXY(OFFSET_X, LIMIT_Y + OFFSET_Y + 3);
     printf("Dragon Length: %5d", lengthDragon + undisplayedLengthDragon);
-    
-    moveCursorXY(X_OFFSET + 53, LIMIT_Y + Y_OFFSET + 3);
-    printf("Obstacles: %5d", numberTiles);
 }
 
 /* Playing field creation/update */
@@ -1081,21 +1085,23 @@ void resetField(enum GAME_MODE gameMode, int numberTiles)
 {
     switch(gameMode)
     {
-        case RANDOM_LEVEL: /* Random field generation upon reaching level target */
-            /* Randomly add "OBSTACLE_CHARACTER"s, an obstacle, and "FOOD_CHARACTER"s, food */
-            spawnTile(numberTiles, FOOD_TILE);
-            spawnTile(numberTiles, OBSTACLE_TILE);
-            playingField[spawnDragon_y][spawnDragon_x] = SPACE_CHARACTER; /* Compensate for overwrite, where Dragon spawns*/
-            break;
         case SPAWN_LEVEL:
-            /* Randomly add one "OBSTACLE_CHARACTER"s, an obstacle, and one "FOOD_CHARACTER"s, food */
+            /* Randomly add a piece of food, and an obstacle */
             spawnTile(1, FOOD_TILE);
             spawnTile(1, OBSTACLE_TILE);
             break;
         case USER_LEVEL:
+			/* Load user defined field to play*/
             loadPlayingField();
             break;
+		default: 
+			/* Defaults to random field generation upon reaching level target mode*/
+            /* Randomly add food and obstacles */
+            spawnTile(numberTiles, FOOD_TILE);
+            spawnTile(numberTiles, OBSTACLE_TILE);
+            break;
     }
+	playingField[SPAWNDRAGON_Y][SPAWNDRAGON_X] = SPACE_CHARACTER; /* Compensate for overwrite, where Dragon spawns*/
     blitField(); /* Update playing field */
 }
 
@@ -1147,13 +1153,13 @@ void blitField()
     /* Blit */
     for(row = 0; row < LIMIT_Y; row++)
     {
-        moveCursorXY(X_OFFSET, Y_OFFSET + row);
+        moveCursorXY(OFFSET_X, OFFSET_Y + row);
         for(col = 0; col < LIMIT_X; col++)
         {
             /* Filtered blitting for efficiency */
             if(FOOD_CHARACTER == playingField[row][col] || OBSTACLE_CHARACTER == playingField[row][col])
             {
-                moveCursorXY(col + X_OFFSET, row + Y_OFFSET);
+                moveCursorXY(col + OFFSET_X, row + OFFSET_Y);
                 printf("%c", playingField[row][col]);
             }
         }
@@ -1174,7 +1180,7 @@ void addNode(char lastDirectionDragon, char directionDragon)
         }
         else if(lastDirectionDragon == playerControls[KeyOptionUsed].KEY_DOWN)
         {
-            Dragon[lengthDragon - 1].character = LU_DR_CHARACTER ; /* left-up, or down-right */
+            Dragon[lengthDragon - 1].character = LU_DR_CHARACTER; /* left-up, or down-right */
         }
 
         Dragon[lengthDragon].character = LL_RR_CHARACTER; /* left, or right character */
@@ -1186,11 +1192,11 @@ void addNode(char lastDirectionDragon, char directionDragon)
         
         if(lastDirectionDragon == playerControls[KeyOptionUsed].KEY_UP)
         {
-            Dragon[lengthDragon - 1].character = RD_UL_CHARACTER ; /* right-down, or up-left */
+            Dragon[lengthDragon - 1].character = RD_UL_CHARACTER; /* right-down, or up-left */
         }
         else if(lastDirectionDragon == playerControls[KeyOptionUsed].KEY_DOWN)
         {
-            Dragon[lengthDragon - 1].character = RU_DL_CHARACTER ; /* right-up, or down-left */
+            Dragon[lengthDragon - 1].character = RU_DL_CHARACTER; /* right-up, or down-left */
         }
 
         Dragon[lengthDragon].character = LL_RR_CHARACTER; /* left, or right */
@@ -1202,11 +1208,11 @@ void addNode(char lastDirectionDragon, char directionDragon)
         
         if(lastDirectionDragon == playerControls[KeyOptionUsed].KEY_LEFT)
         {
-            Dragon[lengthDragon - 1].character = LU_DR_CHARACTER ; /* left-up, or down-right */
+            Dragon[lengthDragon - 1].character = LU_DR_CHARACTER; /* left-up, or down-right */
         }
         else if(lastDirectionDragon == playerControls[KeyOptionUsed].KEY_RIGHT)
         {
-            Dragon[lengthDragon - 1].character = RU_DL_CHARACTER ; /* right-up, or down-left */
+            Dragon[lengthDragon - 1].character = RU_DL_CHARACTER; /* right-up, or down-left */
         }
 
         Dragon[lengthDragon].character = UU_DD_CHARACTER; /* up, or down */
@@ -1222,22 +1228,25 @@ void addNode(char lastDirectionDragon, char directionDragon)
         }
         else if(lastDirectionDragon == playerControls[KeyOptionUsed].KEY_RIGHT)
         {
-            Dragon[lengthDragon - 1].character = RD_UL_CHARACTER ; /* right-down, or up-left */
+            Dragon[lengthDragon - 1].character = RD_UL_CHARACTER; /* right-down, or up-left */
         }
 
         Dragon[lengthDragon].character = UU_DD_CHARACTER; /* up, or down */
     }
 }
 
+/* Save a game record to the binary file */
 void saveGameRecord(char *playerName, char gameMode, int currentScore, int lengthDragon)
 {
     /* Variable declarations within scope of saveGameRecord() */
     struct GameRecord gameRecord;
     FILE *stream = fopen(DRAGON_RECORD_FILE, "a+b ");
 
-    if(NULL == stream) /* Open file for appending, binary */
+    if(NULL == stream) /* Open file for appending a game record in binary */
     {
-        fprintf(stderr, "Cannot write to \"%s\"\n", DRAGON_RECORD_FILE);
+        moveCursorXY(OFFSET_X, 8);
+        printf("Error accessing to \"%s\"\n", DRAGON_RECORD_FILE);
+        moveCursorXY(OFFSET_X, 9);
         system("pause");
         return;
     }
@@ -1248,15 +1257,19 @@ void saveGameRecord(char *playerName, char gameMode, int currentScore, int lengt
     gameRecord.currentScore = currentScore;
     gameRecord.lengthDragon = lengthDragon;
 
-    /* Write gameRecord to file */
+    /* Write game record to file */
     if(1 != fwrite(&gameRecord, sizeof(GameRecord), 1, stream))
     {
-        fprintf(stderr, "Cannot save to file \"%s\"\n", DRAGON_RECORD_FILE);
+        /* Writing error has occured */
+        moveCursorXY(OFFSET_X, 8);
+        printf("Error writing to file \"%s\"\n", DRAGON_RECORD_FILE);
+        moveCursorXY(OFFSET_X, 9);
         system("pause");
     }
     fclose(stream);
 }
 
+/* Clean all game records in the binary file */
 void deleteAllGameRecords()
 {
     /* Variable declaration within scope of deleteAllGameRecords() */
@@ -1264,11 +1277,11 @@ void deleteAllGameRecords()
     
     if(NULL == stream)
     {
-        fprintf(stderr, "Cannot reset/create \"%s\"\n", DRAGON_RECORD_FILE);
+        printf("Cannot reset/clear \"%s\"\n", DRAGON_RECORD_FILE);
     }
     else
     {
-        printf("\"%s\" reset/created\n", DRAGON_RECORD_FILE);
+        printf("\"%s\" reset/cleared\n", DRAGON_RECORD_FILE);
         fclose(stream);
     }
 
@@ -1282,6 +1295,7 @@ int compareScores(const void *record1, const void *record2)
    return ((GameRecord *) record2)->currentScore - ((GameRecord *) record1)->currentScore;
 }
 
+/* Read in all game records from the binary file, showing at most top 20 records */
 void readAllGameRecords()
 {
     /* Variable declaration within scope of readAllGameRecords() */
@@ -1295,7 +1309,7 @@ void readAllGameRecords()
     
     if(NULL == stream) /* Open file for appending, binary */
     {
-        fprintf(stderr, "Cannot read \"%s\"\n", DRAGON_RECORD_FILE);
+        printf("Error reading \"%s\"\n", DRAGON_RECORD_FILE);
         system("pause");
         return;
     }
